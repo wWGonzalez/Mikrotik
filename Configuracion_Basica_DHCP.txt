@@ -1,0 +1,26 @@
+#Nombrar las interfaces
+interface set ether1 name=WAN comment=ether1
+interface set ether2 name=LAN comment=ether2
+
+#Agrega las direcciones
+#WAN si se agrega por DHC
+#ip dhcp-client add interface=WAN disabled=no
+
+#Direcciones estaticas
+ip address add address=192.168.0.78/24 interface=WAN
+ip address add address=192.168.2.1/24 interface=LAN 
+
+#Configurar DNS
+ip dns set servers=8.8.8.8,8.8.4.4
+
+#Configuacion NAT
+ip firewall nat add action=masquerade chain=srcnat comment=Wan1 out-interface=WAN
+
+#Configuracion de Ruta 
+ip route add gateway=192.168.0.1
+
+#Opcional
+#Configuracion DHCP LAN
+ip pool add name=DHCP ranges=192.168.2.150-192.168.2.200
+ip dhcp-server add name=DHCP interface=LAN address-pool=DHCP lease-time=259200 bootp-lease-time=forever authoritative=yes disabled=no 
+ip dhcp-server network add address=192.168.2.0/24 gateway=192.168.2.1 dns-server=8.8.8.8,8.8.4.4
