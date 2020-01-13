@@ -1,0 +1,17 @@
+/queue type
+add kind=pcq name=pcq-upload-1M pcq-classifier=src-address pcq-rate=1M
+add kind=pcq name=pcq-download-10M pcq-classifier=dst-address pcq-rate=10M
+
+#en target seleccionamos nuestra interface LAN y utilizamos el mismo segmento para los clientes 192.168.4.0/24 ó la interface en este caso bridge1
+
+/queue simple
+add name=Limitar max-limit=1M/10M \
+	queue=pcq-upload-1M/pcq-download-10 target=bridge1
+add max-limit=512K/10M name=Hotel target=192.168.4.253 \
+	parent=Limitar
+add max-limit=512K/10M name=wer target=192.168.4.252 \
+	parent=Limitar 
+add max-limit=512K/10M name=comedorArriba target=192.168.4.251 \
+	parent=Limitar
+add max-limit=512K/10M name=comedorAbajo target=192.168.4.251 \
+	parent=Limitar

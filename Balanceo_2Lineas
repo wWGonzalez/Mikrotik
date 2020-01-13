@@ -1,0 +1,58 @@
+#Nombrar las interfaces
+interface set ether1 comment=Wan1
+interface set ether2 comment=Wan2
+
+
+#IMPORTANTE el equipo donde se esta configurando el bridge debe estar en un puerto que no se encuentre en bridge1
+interface bridge add name=bridge1 comment=LAN
+interface bridge port add bridge=bridge1 interface=ether3
+
+/ip address
+add address=192.168.1.8/24 comment="Wan 1" interface=ether1 network=192.168.1.0
+add address=192.168.0.8/24 comment="Wan 2" interface=ether2 network=192.168.0.0
+add address=192.168.4.1/24 comment="Lan" interface=bridge1 network=192.168.4.0
+
+/ip firewall nat
+add action=masquerade chain=srcnat comment=Wan1 out-interface=ether1
+add action=masquerade chain=srcnat comment=Wan2 out-interface=ether2
+
+
+/ip route
+add check-gateway=ping comment="Ruteo wan 1" distance=1 gateway=192.168.1.1 \
+    routing-mark=to_ether1
+add check-gateway=ping comment="Ruteo wan 2" distance=2 gateway=192.168.0.1 \
+    routing-mark=to_ether2
+add check-gateway=ping comment="Wan 1" distance=1 gateway=192.168.1.1
+add check-gateway=ping comment="Wan 2" distance=2 gateway=192.168.0.1
+
+#Configurar DNS
+ip dns set servers=8.8.8.8,8.8.4.4
+
+/ip firewall mangle
+add action=mark-connection chain=prerouting comment="Marca de conexiones" \
+    in-interface=ether1 new-connection-mark=ether1_conn
+add action=mark-connection chain=prerouting in-interface=ether2 \
+    new-connection-mark=ether2_conn
+add action=mark-routing chain=output comment=Salida connection-mark=ether1_conn \
+    new-routing-mark=to_ether1
+add action=mark-routing chain=output connection-mark=ether2_conn \
+    new-routing-mark=to_ether2
+add action=mark-connection chain=prerouting comment="Wan (1) 10 megas" \
+    connection-mark=no-mark dst-address-type=!local in-interface=bridge1 \
+    new-connection-mark=ether1_conn per-connection-classifier=\
+    both-addresses:2/0
+add action=mark-connection chain=prerouting comment="Wan (2) 10 megas" \
+    connection-mark=no-mark dst-address-type=!local in-interface=bridge1 \
+    new-connection-mark=ether2_conn per-connection-classifier=\
+    both-addresses:2/1
+add action=mark-routing chain=prerouting connection-mark=ether1_conn \
+    in-interface=bridge1 new-routing-mark=to_ether1
+add action=mark-routing chain=prerouting connection-mark=ether2_conn \
+    in-interface=bridge1 new-routing-mark=to_ether2
+
+
+
+
+PING
+
+ping 8.8.8.8 routing-table=to_ether2
