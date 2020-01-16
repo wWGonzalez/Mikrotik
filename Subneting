@@ -1,0 +1,51 @@
+#https://agratitudesign.blogspot.com/2017/07/local-port-interfaces-same-network.html
+
+/system identity
+set name=Agratitudesign
+
+/ip dns
+set allow-remote-requests=yes servers=8.8.8.8,8.8.4.4
+
+/system ntp client
+set enabled=yes primary-ntp=216.229.4.66 secondary-ntp=162.159.200.1
+
+/interface ethernet
+set [ find default-name=ether1 ] name=internet
+set [ find default-name=ether2 ] name=localnet-1
+set [ find default-name=ether3 ] name=localnet-2
+set [ find default-name=ether4 ] name=localnet-3
+set [ find default-name=ether5 ] name=localnet-4
+
+/ip address
+add address=192.168.1.2/24 interface=internet network=192.168.1.0
+add address=192.168.2.1/26 interface=localnet-1 network=192.168.2.0
+add address=192.168.2.65/26 interface=localnet-2 network=192.168.2.0
+add address=192.168.2.129/26 interface=localnet-3 network=192.168.2.0
+add address=192.168.2.193/26 interface=localnet-4 network=192.168.2.0
+
+/ip route
+add distance=1 gateway=192.168.1.1
+
+/ip pool
+add name=dhcp_pool1 ranges=192.168.2.2-192.168.2.62
+add name=dhcp_pool2 ranges=192.168.2.66-192.168.2.126
+add name=dhcp_pool3 ranges=192.168.2.130-192.168.2.190
+add name=dhcp_pool4 ranges=192.168.2.194-192.168.2.254
+
+/ip dhcp-server
+add address-pool=dhcp_pool1 disabled=no interface=localnet-1 name=dhcp1
+add address-pool=dhcp_pool2 disabled=no interface=localnet-2 name=dhcp2
+add address-pool=dhcp_pool3 disabled=no interface=localnet-3 name=dhcp3
+add address-pool=dhcp_pool4 disabled=no interface=localnet-4 name=dhcp4
+
+/ip dhcp-server network
+add address=192.168.2.0/26 dns-server=8.8.8.8,8.8.4.4 gateway=192.168.2.1
+add address=192.168.2.64/26 dns-server=8.8.8.8,8.8.4.4 gateway=192.168.2.65
+add address=192.168.2.128/26 dns-server=8.8.8.8,8.8.4.4 gateway=192.168.2.129
+add address=192.168.2.192/26 dns-server=8.8.8.8,8.8.4.4 gateway=192.168.2.193
+
+/ip firewall nat 
+add action=masquerade chain=srcnat out-interface=internet src-address=192.168.2.0/26 disabled=no comment="localnet-1"
+add action=masquerade chain=srcnat out-interface=internet src-address=192.168.2.64/26 disabled=no comment="localnet-2"
+add action=masquerade chain=srcnat out-interface=internet src-address=192.168.2.128/26 disabled=no comment="localnet-3"
+add action=masquerade chain=srcnat out-interface=internet src-address=192.168.2.192/26 disabled=no comment="localnet-4" 
