@@ -8,8 +8,8 @@ interface bridge add name=bridge1 comment=LAN
 interface bridge port add bridge=bridge1 interface=ether3
 
 /ip address
-add address=192.168.1.8/24 comment="Wan 1" interface=ether1 network=192.168.1.0
-add address=192.168.0.8/24 comment="Wan 2" interface=ether2 network=192.168.0.0
+add address=192.168.1.87/24 comment="Wan 1" interface=ether1 network=192.168.1.0
+add address=192.168.0.87/24 comment="Wan 2" interface=ether2 network=192.168.0.0
 add address=192.168.4.1/24 comment="Lan" interface=bridge1 network=192.168.4.0
 
 /ip firewall nat
